@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "treppenlift": {
+      "type": "streamable-http",
+      "url": "https://treppenliftvergleichsportal.de/mcp?src=mcp"
+    }
+  }
+}

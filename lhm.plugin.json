@@ -1,0 +1,925 @@
+{
+  "cloudEndpoint": "https://treppenliftvergleichsportal.de/mcp?src=mcp",
+  "description": "German stairlift data for AI assistants: stairlift and home lift costs with the care insurance subsidy, grants for all 16 federal states, stair width check, fault help (beeping, error codes), repair or replace. Sourced, read-only.",
+  "homepage": "https://treppenliftvergleichsportal.de/ki-assistenten",
+  "identifier": "treppenlift",
+  "name": "TreppenliftVergleich",
+  "prompts": [],
+  "resources": [],
+  "tools": [
+    {
+      "name": "treppenlift_kosten_schaetzen",
+      "title": "Treppenlift-Kosten schätzen",
+      "description": "Use when someone in Germany asks what a stairlift or home lift costs: \"Was kostet ein Treppenlift\", \"Treppenlift Kosten mit Einbau\", \"Kurvenlift Preis\", \"Treppenlift 2 Etagen Kosten\", \"Treppenlift gebraucht Preis\", \"Plattformlift Kosten\", \"Homelift ohne Schacht Kosten\", \"Treppenraupe Preis\". Returns the market price range including installation for the lift type, stair shape and number of floors (the same calculation as the cost calculator on treppenliftvergleichsportal.de), the long-term care insurance subsidy of up to 4,180 EUR per eligible person (§ 40 (4) SGB XI) and the resulting own share, running costs, and sources with check dates. No personal data is needed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "liftart": {
+            "type": "string",
+            "enum": [
+              "sitzlift",
+              "stehlift",
+              "plattformlift",
+              "hublift",
+              "homelift",
+              "treppensteighilfe"
+            ],
+            "default": "sitzlift",
+            "description": "sitzlift = Treppenlift mit Sitz (Standard); stehlift = Treppenlift zum Stehen; plattformlift = für Rollstuhl auf der Treppe; hublift = senkrecht bis ca. 1,8 m; homelift = kleiner Aufzug im Haus; treppensteighilfe = mobile Treppenraupe ohne Einbau."
+          },
+          "treppenform": {
+            "type": "string",
+            "enum": [
+              "gerade",
+              "kurvig",
+              "aussen"
+            ],
+            "default": "gerade",
+            "description": "Nur Sitz- und Stehlift: gerade Treppe, kurvige oder Wendeltreppe (Maßschiene), Außentreppe."
+          },
+          "etagen": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "default": 1,
+            "description": "Nur Sitz- und Stehlift: Anzahl der Etagen, die der Lift überwindet. 3 steht für 3 oder mehr (Ergebnis ist dann eine Untergrenze)."
+          },
+          "zustand": {
+            "type": "string",
+            "enum": [
+              "neu",
+              "gebraucht"
+            ],
+            "default": "neu",
+            "description": "Nur Sitzlift: neu oder gebraucht/aufbereitet."
+          },
+          "homelift_variante": {
+            "type": "string",
+            "enum": [
+              "ohne_schacht",
+              "mit_schacht",
+              "aussen_1_geschoss",
+              "aussen_2_geschosse"
+            ],
+            "default": "ohne_schacht",
+            "description": "Nur Homelift: ohne Schacht (2 Etagen), mit Schacht oder Kabine, Außenaufzug für 1 oder 2 Geschosse."
+          },
+          "personen_mit_pflegegrad": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4,
+            "description": "Optional: Zahl der Personen im Haushalt mit anerkanntem Pflegegrad (1 bis 5). Je Person zahlt die Pflegekasse bis 4.180 €, zusammen höchstens 16.720 €. Ohne Angabe zeigt das Ergebnis ein Beispiel mit einer Person."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "eingaben": {
+            "type": "object"
+          },
+          "bezeichnung": {
+            "type": "string"
+          },
+          "kosten_von": {
+            "type": "number"
+          },
+          "kosten_bis": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "kosten_text": {
+            "type": "string"
+          },
+          "zuschuss_pflegekasse": {
+            "type": "number"
+          },
+          "zuschuss_personen": {
+            "type": "integer"
+          },
+          "eigenanteil_von": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "eigenanteil_bis": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "eigenanteil_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nebenkosten_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "laufende_kosten": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "hinweise": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "rechner_url": {
+            "type": "string"
+          },
+          "info_url": {
+            "type": "string"
+          },
+          "quellen": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "wert": {
+                  "type": "string"
+                },
+                "beschreibung": {
+                  "type": "string"
+                },
+                "quelle": {
+                  "type": "string"
+                },
+                "quelle_url": {
+                  "type": "string"
+                },
+                "geprueft": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "wert",
+                "quelle",
+                "quelle_url",
+                "geprueft"
+              ]
+            }
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bezeichnung",
+          "kosten_von",
+          "kosten_bis",
+          "kosten_text",
+          "zuschuss_pflegekasse",
+          "hinweise",
+          "rechner_url",
+          "info_url",
+          "quellen",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Treppenlift-Kosten schätzen"
+      }
+    },
+    {
+      "name": "foerderung_finden",
+      "title": "Förderung für Treppenlift finden",
+      "description": "Use when someone asks which grants or loans help pay for a stairlift or home lift in Germany: \"Treppenlift Zuschuss\", \"Treppenlift Förderung Bayern\", \"Zuschuss Treppenlift NRW\", \"KfW 455-B Treppenlift\", \"Treppenlift von der Steuer absetzen\", \"Förderung Treppenlift Stuttgart\". Returns the federal options with their current status (Pflegekasse § 40 SGB XI, KfW grant 455-B closed since 01.08.2026, KfW loan 159, tax reduction § 35a EStG), the programme of the federal state from the 16-state funding atlas (grant or loan, maximum amount, whether a seat stairlift qualifies, check date) and known city programmes, plus the order in which to apply. Without a state it lists all 16. Input: a federal state (name or abbreviation) or a city; no personal data.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "bundesland": {
+            "type": "string",
+            "description": "Bundesland als Name oder Kürzel, zum Beispiel \"Bayern\", \"NRW\", \"Baden-Württemberg\". Leer lassen für die Übersicht aller 16 Länder."
+          },
+          "ort": {
+            "type": "string",
+            "description": "Optional: Stadt, zum Beispiel \"Stuttgart\" oder \"Dresden\". Bestimmt auch das Bundesland, wenn keins angegeben ist."
+          },
+          "liftart": {
+            "type": "string",
+            "enum": [
+              "sitzlift",
+              "plattformlift",
+              "homelift",
+              "andere"
+            ],
+            "default": "sitzlift",
+            "description": "Optional: welche Art von Lift gefördert werden soll."
+          }
+        },
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "eingaben": {
+            "type": "object"
+          },
+          "bund": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "programm": {
+                  "type": "string"
+                },
+                "stand": {
+                  "type": "string"
+                },
+                "hinweis": {
+                  "type": "string"
+                },
+                "quellen": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "wert": {
+                        "type": "string"
+                      },
+                      "beschreibung": {
+                        "type": "string"
+                      },
+                      "quelle": {
+                        "type": "string"
+                      },
+                      "quelle_url": {
+                        "type": "string"
+                      },
+                      "geprueft": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "wert",
+                      "quelle",
+                      "quelle_url",
+                      "geprueft"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "programm",
+                "stand",
+                "hinweis",
+                "quellen"
+              ]
+            }
+          },
+          "land": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "laender": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "object",
+              "properties": {
+                "land": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "stelle": {
+                  "type": "string"
+                },
+                "art": {
+                  "type": "string"
+                },
+                "hoechstbetrag": {
+                  "type": "string"
+                },
+                "fuer_sitzlift": {
+                  "type": "string",
+                  "enum": [
+                    "ja",
+                    "kaum",
+                    "nein"
+                  ]
+                },
+                "hinweis": {
+                  "type": "string"
+                },
+                "geprueft": {
+                  "type": "string"
+                },
+                "info_url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "land",
+                "name",
+                "stelle",
+                "art",
+                "fuer_sitzlift",
+                "hinweis",
+                "geprueft",
+                "info_url"
+              ]
+            }
+          },
+          "stadt": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "reihenfolge": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "hinweise": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "foerderatlas_url": {
+            "type": "string"
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "bund",
+          "land",
+          "reihenfolge",
+          "hinweise",
+          "foerderatlas_url",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Förderung für Treppenlift finden"
+      }
+    },
+    {
+      "name": "treppe_pruefen",
+      "title": "Passt ein Treppenlift auf die Treppe?",
+      "description": "Use when someone asks whether a stairlift fits their staircase or how wide a staircase must be: \"Treppenlift Mindestbreite\", \"Treppenlift schmale Treppe 65 cm\", \"Wie breit muss die Treppe für einen Treppenlift sein\", \"Plattformlift Treppenbreite\", \"Treppenlift im Mehrfamilienhaus Fluchtweg\". Takes the usable stair width in centimetres, the building type and whether the user sits, stands or uses a wheelchair, and returns which lift types usually fit, the rules that apply (rule-of-thumb widths, DIN 18065 and the 60 cm remaining width next to a moving lift under the German model building regulation MVV TB), how to measure correctly and alternatives. Guide values only; the binding measurement is the installer's survey.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "treppenbreite_cm": {
+            "type": "number",
+            "minimum": 30,
+            "maximum": 300,
+            "description": "Nutzbare Treppenbreite an der engsten Stelle in Zentimetern, gemessen von der Wand bis zur Innenkante des Handlaufs."
+          },
+          "gebaeude": {
+            "type": "string",
+            "enum": [
+              "einfamilienhaus",
+              "mehrfamilienhaus"
+            ],
+            "default": "einfamilienhaus",
+            "description": "Einfamilienhaus (eigene Treppe) oder Mehrfamilienhaus (gemeinsames Treppenhaus, Fluchtweg)."
+          },
+          "nutzung": {
+            "type": "string",
+            "enum": [
+              "sitzen",
+              "stehen",
+              "rollstuhl"
+            ],
+            "default": "sitzen",
+            "description": "Wie fährt die Person: im Sitz, im Stehen oder im Rollstuhl."
+          },
+          "treppenform": {
+            "type": "string",
+            "enum": [
+              "gerade",
+              "kurvig",
+              "aussen"
+            ],
+            "default": "gerade",
+            "description": "Optional: Form der Treppe."
+          }
+        },
+        "required": [
+          "treppenbreite_cm"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "eingaben": {
+            "type": "object"
+          },
+          "ergebnis": {
+            "type": "string",
+            "enum": [
+              "meist_machbar",
+              "grenzwertig",
+              "kaum_machbar"
+            ]
+          },
+          "ergebnis_text": {
+            "type": "string"
+          },
+          "liftarten": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "liftart": {
+                  "type": "string"
+                },
+                "bewertung": {
+                  "type": "string"
+                },
+                "begruendung": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "liftart",
+                "bewertung",
+                "begruendung"
+              ]
+            }
+          },
+          "regeln": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "messen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "alternativen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "info_url": {
+            "type": "string"
+          },
+          "quellen": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "wert": {
+                  "type": "string"
+                },
+                "beschreibung": {
+                  "type": "string"
+                },
+                "quelle": {
+                  "type": "string"
+                },
+                "quelle_url": {
+                  "type": "string"
+                },
+                "geprueft": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "wert",
+                "quelle",
+                "quelle_url",
+                "geprueft"
+              ]
+            }
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ergebnis",
+          "ergebnis_text",
+          "liftarten",
+          "regeln",
+          "messen",
+          "info_url",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Passt ein Treppenlift auf die Treppe?"
+      }
+    },
+    {
+      "name": "treppenlift_stoerung",
+      "title": "Treppenlift-Störung beheben",
+      "description": "Use when a stairlift owner reports a problem: \"Treppenlift piept\", \"Treppenlift fährt nicht mehr\", \"Treppenlift bleibt stehen\", \"Fernbedienung Treppenlift geht nicht\", \"Treppenlift Akku\", \"Acorn Fehlercode E7\", \"Lifta Störung\", \"Treppenlift zurücksetzen\". Returns the checks in order of frequency, what not to do for safety, when to call the technician, brand notes for Lifta, Acorn, TK Home Solutions (ThyssenKrupp), Handicare, HIRO and Stannah, and the meaning of documented Acorn T700 codes. It gives no repair instructions inside the device.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "symptom": {
+            "type": "string",
+            "enum": [
+              "piept",
+              "faehrt_nicht",
+              "bleibt_mit_person_stehen",
+              "fernbedienung",
+              "langsam_oder_akku",
+              "fehlercode"
+            ],
+            "description": "Was passiert: piept; fährt nicht; bleibt mit Person auf der Treppe stehen; nur die Fernbedienung geht nicht; fährt langsam oder Akku hält nicht; Display zeigt einen Fehlercode."
+          },
+          "marke": {
+            "type": "string",
+            "enum": [
+              "lifta",
+              "acorn",
+              "tk",
+              "handicare",
+              "hiro",
+              "stannah",
+              "andere"
+            ],
+            "description": "Optional: Hersteller. tk = TK Home Solutions, früher ThyssenKrupp."
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 6,
+            "description": "Optional: angezeigter Code, zum Beispiel \"E7\"."
+          }
+        },
+        "required": [
+          "symptom"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "eingaben": {
+            "type": "object"
+          },
+          "titel": {
+            "type": "string"
+          },
+          "kurz": {
+            "type": "string"
+          },
+          "schritte": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "nicht_tun": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "techniker_rufen": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "marke": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "marke_hinweis": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "code": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "code_bedeutung": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "code_tun": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "info_url": {
+            "type": "string"
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "titel",
+          "kurz",
+          "schritte",
+          "nicht_tun",
+          "techniker_rufen",
+          "info_url",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Treppenlift-Störung beheben"
+      }
+    },
+    {
+      "name": "reparieren_oder_ersetzen",
+      "title": "Reparieren oder ersetzen?",
+      "description": "Use when a stairlift owner has a repair quote and asks whether the repair is still worth it: \"Treppenlift Reparatur lohnt sich\", \"Treppenlift 12 Jahre alt Reparatur 2.000 Euro\", \"Treppenlift reparieren oder neu kaufen\". Compares the quote with the lower end of the new price including installation for a straight or curved stair and takes the age of the lift into account (rule of thumb from the calculator on treppenliftvergleichsportal.de: below a quarter repair, a quarter to a half depends on age, over a half get quotes, at or above the new price replace).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "alter_jahre": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 60,
+            "description": "Alter des Lifts in Jahren."
+          },
+          "reparaturkosten_eur": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100000,
+            "description": "Kosten der Reparatur laut Kostenvoranschlag in Euro."
+          },
+          "treppenform": {
+            "type": "string",
+            "enum": [
+              "gerade",
+              "kurvig"
+            ],
+            "default": "gerade",
+            "description": "Gerade oder kurvige Treppe."
+          }
+        },
+        "required": [
+          "alter_jahre",
+          "reparaturkosten_eur"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "eingaben": {
+            "type": "object"
+          },
+          "neupreis_von": {
+            "type": "number"
+          },
+          "neupreis_bis": {
+            "type": "number"
+          },
+          "anteil_prozent": {
+            "type": "integer"
+          },
+          "einschaetzung": {
+            "type": "string",
+            "enum": [
+              "Reparieren",
+              "Abwägen",
+              "Angebote einholen",
+              "Ersetzen"
+            ]
+          },
+          "begruendung": {
+            "type": "string"
+          },
+          "regel": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "info_url": {
+            "type": "string"
+          },
+          "quellen": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "wert": {
+                  "type": "string"
+                },
+                "beschreibung": {
+                  "type": "string"
+                },
+                "quelle": {
+                  "type": "string"
+                },
+                "quelle_url": {
+                  "type": "string"
+                },
+                "geprueft": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "wert",
+                "quelle",
+                "quelle_url",
+                "geprueft"
+              ]
+            }
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "neupreis_von",
+          "neupreis_bis",
+          "anteil_prozent",
+          "einschaetzung",
+          "begruendung",
+          "regel",
+          "info_url",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Reparieren oder ersetzen?"
+      }
+    },
+    {
+      "name": "treppenlift_fakten",
+      "title": "Belegte Fakten zum Treppenlift",
+      "description": "Use for sourced figures about stairlifts and home lifts in Germany: prices by lift type, the price index of published entry prices, the care insurance subsidy, KfW status, tax, running costs, minimum stair width rules, home lift prices, building code for lifts without a shaft, technical data, tests and studies (DISQ, Stiftung Warentest), statistics on care at home. Each fact comes with value, source, URL and check date from the fact register of treppenliftvergleichsportal.de.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "thema": {
+            "type": "string",
+            "enum": [
+              "preise",
+              "preisindex",
+              "zuschuss_pflegekasse",
+              "kfw",
+              "steuer",
+              "laufende_kosten",
+              "treppenbreite",
+              "homelift_kosten",
+              "homelift_baurecht",
+              "homelift_technik",
+              "tests",
+              "statistik"
+            ],
+            "description": "Thema der Fakten."
+          }
+        },
+        "required": [
+          "thema"
+        ],
+        "additionalProperties": false
+      },
+      "outputSchema": {
+        "type": "object",
+        "properties": {
+          "thema": {
+            "type": "string"
+          },
+          "titel": {
+            "type": "string"
+          },
+          "fakten": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "wert": {
+                  "type": "string"
+                },
+                "beschreibung": {
+                  "type": "string"
+                },
+                "quelle": {
+                  "type": "string"
+                },
+                "quelle_url": {
+                  "type": "string"
+                },
+                "geprueft": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "wert",
+                "quelle",
+                "quelle_url",
+                "geprueft"
+              ]
+            }
+          },
+          "stand": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "info_url": {
+            "type": "string"
+          },
+          "disclaimer": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "thema",
+          "titel",
+          "fakten",
+          "info_url",
+          "disclaimer"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false,
+        "title": "Belegte Fakten zum Treppenlift"
+      }
+    }
+  ],
+  "version": "1.0.0",
+  "tags": [
+    "stairlift",
+    "treppenlift",
+    "home-lift",
+    "germany",
+    "grants",
+    "remote"
+  ]
+}

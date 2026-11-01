@@ -1,0 +1,8 @@
+{
+  "name": "treppenlift-mcp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "German stairlift data for AI assistants: stairlift and home lift costs with the care insurance subsidy, grants for all 16 federal states, stair width check, fault help (beeping, error codes), repair or replace. Sourced, read-only.",
+  "homepage": "https://treppenliftvergleichsportal.de/ki-assistenten",
+  "license": "UNLICENSED"
+}

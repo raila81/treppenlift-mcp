@@ -1,0 +1,14 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "de.treppenliftvergleichsportal/treppenlift",
+  "title": "TreppenliftVergleich",
+  "description": "German stairlifts: costs, grants per state, stair width check, fault help, repair or replace.",
+  "websiteUrl": "https://treppenliftvergleichsportal.de/ki-assistenten",
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://treppenliftvergleichsportal.de/mcp?src=mcp"
+    }
+  ]
+}
